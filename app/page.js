@@ -1,103 +1,289 @@
+"use client";
+import { useState } from "react";
 import Image from "next/image";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [amount, setAmount] = useState("");
+  const [term, setTerm] = useState("");
+  const [rate, setRate] = useState("");
+  const [type, setType] = useState("");
+  const [result, setResult] = useState(null);
+  const [errors, setErrors] = useState({});
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const validate = () => {
+    const newErrors = {};
+    if (!amount) newErrors.amount = "This field is required";
+    if (!term) newErrors.term = "This field is required";
+    if (!rate) newErrors.rate = "This field is required";
+    if (!type) newErrors.type = "This field is required";
+    return newErrors;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newErrors = validate();
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) return;
+
+    const principal = parseFloat(amount);
+    const annualRate = parseFloat(rate) / 100;
+    const months = parseFloat(term) * 12;
+
+    if (type === "repayment") {
+      const monthlyRate = annualRate / 12;
+      const repayment =
+        (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+        (Math.pow(1 + monthlyRate, months) - 1);
+      
+      setResult(repayment.toFixed(2));
+    } else if (type === "interest") {
+      const interestOnly = (principal * annualRate) / 12;
+      setResult(interestOnly.toFixed(2));
+    }
+  };
+
+  const clearAll = () => {
+    setAmount("");
+    setTerm("");
+    setRate("");
+    setType("");
+    setResult(null);
+    setErrors({});
+  };
+
+  
+  const handleChange = (field, value) => {
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+    if (field === "amount") setAmount(value);
+    if (field === "term") setTerm(value);
+    if (field === "rate") setRate(value);
+  };
+
+  const handleTypeChange = (value) => {
+    setType(value);
+    if (errors.type) {
+      setErrors((prev) => ({ ...prev, type: undefined }));
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen font-heading bg-white lg:bg-sky-100">
+      <div className="max-w-4xl lg:border-2 border-black lg:rounded-lg flex flex-col lg:flex-row bg-white overflow-hidden">
+        
+        <div className="lg:w-1/2 p-8">
+          <div className="flex justify-between">
+            <h1 className="font-bold text-xl">Mortgage Calculator</h1>
+            <button
+              type="button"
+              onClick={clearAll}
+              className="underline text-gray-600 hover:text-black cursor-pointer"
+            >
+              Clear All
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-4">
+            
+            <div>
+              <label>Mortgage Amount</label>
+              <div
+                className={`group flex w-full border rounded-md transition-colors overflow-hidden
+                  ${
+                    errors.amount
+                      ? "border-red-500"
+                      : "border-black focus-within:border-yellow-400"
+                  }`}
+              >
+                <span
+                  className={`min-w-10 text-center px-2 py-1 flex items-center justify-center transition-colors
+                    ${
+                      errors.amount
+                        ? "bg-red-500 text-white"
+                        : "bg-blue-100 group-focus-within:bg-yellow-300"
+                    }`}
+                >
+                  £
+                </span>
+                <input
+                  type="text"
+                  id="amount"
+                  value={amount}
+                  onChange={(e) => handleChange("amount", e.target.value)}
+                  autoComplete="off"
+                  className="w-full px-2 py-1 focus:outline-none bg-transparent"
+                  onFocus={() => setErrors({})}
+                />
+              </div>
+              {errors.amount && (
+                <p className="text-red-500 text-sm mt-1">{errors.amount}</p>
+              )}
+            </div>
+
+            
+            <div className="flex flex-col lg:flex-row justify-between">
+              
+              <div className="flex flex-col lg:w-[48%]">
+                <label>Mortgage Term</label>
+                <div
+                  className={`group flex w-full border rounded-md transition-colors overflow-hidden
+                    ${
+                      errors.term
+                        ? "border-red-500"
+                        : "border-black focus-within:border-yellow-400"
+                    }`}
+                >
+                  <input
+                    type="text"
+                    id="term"
+                    value={term}
+                    onChange={(e) => handleChange("term", e.target.value)}
+                    autoComplete="off"
+                    className="w-full px-2 py-1 focus:outline-none bg-transparent"
+                    onFocus={() => setErrors({})}
+                  />
+                  <span
+                    className={`min-w-15 text-center px-2 py-1 flex items-center justify-center transition-colors
+                      ${
+                        errors.term
+                          ? "bg-red-500 text-white"
+                          : "bg-blue-100 group-focus-within:bg-yellow-300"
+                      }`}
+                  >
+                    years
+                  </span>
+                </div>
+                {errors.term && (
+                  <p className="text-red-500 text-sm mt-1">{errors.term}</p>
+                )}
+              </div>
+
+              
+              <div className="flex flex-col lg:w-[48%]">
+                <label>Interest Rate</label>
+                <div
+                  className={`group flex w-full border rounded-md transition-colors overflow-hidden
+                    ${
+                      errors.rate
+                        ? "border-red-500"
+                        : "border-black focus-within:border-yellow-400"
+                    }`}
+                >
+                  <input
+                    type="text"
+                    id="rate"
+                    value={rate}
+                    onChange={(e) => handleChange("rate", e.target.value)}
+                    autoComplete="off"
+                    className="w-full px-2 py-1 focus:outline-none bg-transparent"
+                    onFocus={() => setErrors({})}
+                  />
+                  <span
+                    className={`min-w-10 text-center px-2 py-1 flex items-center justify-center transition-colors
+                      ${
+                        errors.rate
+                          ? "bg-red-500 text-white"
+                          : "bg-blue-100 group-focus-within:bg-yellow-300"
+                      }`}
+                  >
+                    %
+                  </span>
+                </div>
+                {errors.rate && (
+                  <p className="text-red-500 text-sm mt-1">{errors.rate}</p>
+                )}
+              </div>
+            </div>
+
+           
+            <div>
+              <label>Mortgage Type</label>
+              <div className="flex flex-col gap-2 mt-1">
+                {["repayment", "interest"].map((val) => (
+                  <label
+                    key={val}
+                    className={`border rounded-md px-3 py-2 flex items-center gap-2 cursor-pointer transition-colors
+                      ${
+                        type === val
+                          ? "border-yellow-500 bg-yellow-200"
+                          : errors.type
+                          ? "border-red-500"
+                          : "border-black"
+                      }`}
+                  >
+                    <input
+                      type="radio"
+                      name="type"
+                      value={val}
+                      checked={type === val}
+                      onChange={() => handleTypeChange(val)}
+                      className="accent-yellow-600"
+                      onFocus={() => setErrors({})}
+                      
+                    />
+                    {val === "repayment" ? "Repayment" : "Interest Only"}
+                  </label>
+                ))}
+              </div>
+              {errors.type && (
+                <p className="text-red-500 text-sm mt-1">{errors.type}</p>
+              )}
+            </div>
+
+            
+            <button
+              type="submit"
+              className="bg-yellow-300 mt-4 py-2 font-bold rounded-md flex items-center justify-center gap-2 hover:bg-yellow-400 transition cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Image
+                  src="/icon-calculator.svg"
+                  alt="Calculator Icon"
+                  width={24}
+                  height={24}
+                />
+              
+                <p>Calculate Repayments</p>
+              </div>
+            </button>
+          </form>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        
+        <div className="lg:w-1/2 bg-sky-900 lg:rounded-bl-[100px] flex flex-col justify-center items-center text-white p-10">
+          {result ? (
+            <>
+              <h2 className="text-xl font-bold mb-2">Your Result</h2>
+              <p className="">Your results are shown below based on the information you provided. To adjust the results, edit the form and click “calculate repayments” again.</p>
+              <div className="bg-blue-950 border-t-2 border-amber-300 min-w-1/2 p-6 rounded-lg">
+                <p> Your Monthly Repayment </p>
+                <span className="text-4xl font-bold text-amber-300">{result}</span>
+                <hr className="border-0.5 border-amber-300/20 my-2" />
+                <p>Total you'll repay over the term </p>
+                <span className="text-2xl font-bold text-amber-300">£{(parseFloat(result) * parseFloat(term) * 12).toFixed(2)}</span>
+
+              </div>
+            </>
+          ) : (
+            <>
+              <Image
+                src="/illustration-empty.svg"
+                alt="Illustration Empty"
+                width={150}
+                height={150}
+              />
+              <h1 className="text-xl mt-4 font-bold">Results shown here</h1>
+              <p className="p-8 text-center text-sm text-sky-200">
+                Complete the form and click{` "Calculate repayments" `}to see whata
+                your monthly repayment would be.
+              </p>
+
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
