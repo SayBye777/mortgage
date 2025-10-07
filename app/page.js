@@ -261,7 +261,7 @@ export default function Home() {
                 <p> Your Monthly Repayment </p>
                 <span className="text-4xl font-bold text-amber-300">{result}</span>
                 <hr className="border-0.5 border-amber-300/20 my-2" />
-                <p>Total you'll repay over the term </p>
+                <p>Total {`you'll`} repay over the term </p>
                 <span className="text-2xl font-bold text-amber-300">£{(parseFloat(result) * parseFloat(term) * 12).toFixed(2)}</span>
 
               </div>
